@@ -26,3 +26,7 @@
 *.exe
 *.out
 *.app
+
+# Solution temp files
+*.sdf
+*.suo
