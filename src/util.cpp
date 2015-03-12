@@ -1,6 +1,4 @@
 #include "util.h"
-#include <algorithm>
-
 
 void HDCPool::spliceImages(HDC &capture
   , HBITMAP & bmp
@@ -217,4 +215,182 @@ void createScreenShot(std::vector<unsigned char>& data, std::vector<int> monitor
   hdcPool.iterateThroughDesktops();
   hdcPool.spliceImages(capture, bmp, originalBmp, &width, &height);
   createBitmapFinal(data, capture, bmp, originalBmp, hdcPool.totalWidth, hdcPool.totalHeight);
+}
+
+
+int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
+{
+  UINT  num = 0;          // number of image encoders
+  UINT  size = 0;         // size of the image encoder array in bytes
+
+  Gdiplus::ImageCodecInfo* pImageCodecInfo = NULL;
+
+  Gdiplus::GetImageEncodersSize(&num, &size);
+  if (size == 0)
+    return -1;  // Failure
+
+  pImageCodecInfo = (Gdiplus::ImageCodecInfo*)(malloc(size));
+  if (pImageCodecInfo == NULL)
+    return -1;  // Failure
+
+  GetImageEncoders(num, size, pImageCodecInfo);
+
+  for (UINT j = 0; j < num; ++j)
+  {
+    if (wcscmp(pImageCodecInfo[j].MimeType, format) == 0)
+    {
+      *pClsid = pImageCodecInfo[j].Clsid;
+      free(pImageCodecInfo);
+      return j;  // Success
+    }
+  }
+
+  free(pImageCodecInfo);
+  return -1;  // Failure
+}
+
+void split(const std::string &s, char delim, std::vector<std::wstring> &elems) {
+  std::stringstream ss(s);
+  std::vector<std::string> tmpVec;
+  std::string item;
+  bool b = false;
+  while (std::getline(ss, item, delim)) {
+    tmpVec.push_back(item);
+  }
+  for (unsigned i = 0; i < tmpVec.size(); i++)
+  {
+    if (b){
+      b = false;
+      continue;
+    }
+    char c = tmpVec[i].at(0);
+    //check if the " character is found
+    //check if there is another argument
+    if (c == '\"' && i + 1 < tmpVec.size())
+    {
+      b = true;
+      unsigned k = i;
+      for (; k < tmpVec.size(); k++){
+        if (i != k)
+        {
+          tmpVec[i] += (" " + tmpVec[k]);
+        }
+        // first charater is '\"'
+        if (tmpVec[k].substr(1).find('\"') != std::string::npos)
+        {
+          tmpVec[i] = tmpVec[i].substr(1, tmpVec[i].size() - 1);
+          break;
+        }
+
+      }
+    }
+    std::wstring tmp(tmpVec[i].begin(), tmpVec[i].end());
+    elems.push_back(tmp);
+
+  }
+  // 
+}
+
+void getScreenShotByWindowTitleOrRect(HWND windowSearched, wchar_t* filename, RECT rect, bool rectProvided)
+{
+
+  // If windowSearched and rectangle was provided we should recalculate rectangle to the windowSearched coordinates 
+  if (windowSearched && rectProvided)
+  {
+    RECT wrect;
+    GetWindowRect(windowSearched, &wrect);
+    OffsetRect(&rect, wrect.left, wrect.top);
+  }
+
+  Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+  ULONG_PTR gdiplusToken;
+  Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
+  HWND desktop = GetDesktopWindow();
+  HDC desktopdc = GetDC(desktop);
+  HDC mydc = CreateCompatibleDC(desktopdc);
+
+  int width = (rect.right - rect.left == 0) ? GetSystemMetrics(SM_CXSCREEN) : rect.right - rect.left;
+  int height = (rect.bottom - rect.top == 0) ? GetSystemMetrics(SM_CYSCREEN) : rect.bottom - rect.top;
+
+  HBITMAP mybmp = CreateCompatibleBitmap(desktopdc, width, height);
+  HBITMAP oldbmp = (HBITMAP)SelectObject(mydc, mybmp);
+  BitBlt(mydc, 0, 0, width, height, desktopdc, rect.left, rect.top, SRCCOPY | CAPTUREBLT);
+  SelectObject(mydc, oldbmp);
+
+  if (windowSearched) SetWindowPos(windowSearched, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+
+  Gdiplus::Bitmap* b = Gdiplus::Bitmap::FromHBITMAP(mybmp, NULL);
+  CLSID  encoderClsid;
+  Gdiplus::Status stat = Gdiplus::GenericError;
+  if (b && GetEncoderClsid(L"image/png", &encoderClsid) != -1) {
+    stat = b->Save(filename, &encoderClsid, NULL);
+  }
+  if (b)
+    delete b;
+
+  // cleanup
+  Gdiplus::GdiplusShutdown(gdiplusToken);
+  ReleaseDC(desktop, desktopdc);
+  DeleteObject(mybmp);
+  DeleteDC(mydc);
+}
+// for all desktops 
+
+void SaveVectorToFile(const wchar_t* fileName, const std::vector<unsigned char>& data)
+{
+  Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+  ULONG_PTR gdiplusToken;
+  Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
+  Gdiplus::Bitmap* pBitmap = NULL;
+  IStream* pStream = NULL;
+
+  HRESULT hResult = ::CreateStreamOnHGlobal(NULL, TRUE, &pStream);
+  if (hResult == S_OK && pStream)
+  {
+    hResult = pStream->Write(&data[0], ULONG(data.size()), NULL);
+    if (hResult == S_OK)
+      pBitmap = Gdiplus::Bitmap::FromStream(pStream, 1);
+
+    CLSID  encoderClsid;
+    Gdiplus::Status stat = Gdiplus::GenericError;
+    if (pBitmap && GetEncoderClsid(L"image/png", &encoderClsid) != -1) {
+      stat = pBitmap->Save(fileName, &encoderClsid, NULL);
+    }
+    if (pBitmap)
+      delete pBitmap;
+    pStream->Release();
+  }
+  Gdiplus::GdiplusShutdown(gdiplusToken);
+  /* HANDLE hFile = CreateFileW(fileName, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, 0, NULL);
+  if (hFile == INVALID_HANDLE_VALUE)
+  throw std::logic_error("SaveVectorToFile : can't open file ");
+  DWORD bytesWriten = 0;
+  if (!WriteFile(hFile, &data[0], (DWORD)data.size(), &bytesWriten, 0))
+  throw std::logic_error("SaveVectorToFile : can't write to file ");*/
+}
+
+void getAllDesktopsScreenshot(wchar_t* filename){
+  std::vector<int> placeholder;
+  std::vector<unsigned char> data;
+  createScreenShot(data, placeholder);
+  SaveVectorToFile(filename, data); // saves in bmp format, not png for now
+
+}
+
+void parseMonitorsToDisplay(std::vector<int>& monitorsToDisplay, std::wstring& monitorArg)
+{
+  std::string tmpstr(monitorArg.begin(), monitorArg.end());
+  std::stringstream ss(tmpstr);
+  std::string item;
+  bool b = false;
+  while (std::getline(ss, item, ',')) {
+    monitorsToDisplay.push_back(std::stoi(item));
+  }
+}
+void getSomeDesktopsScreenshot(const wchar_t* filename, const std::vector<int>& monitorsToDisplay){
+  std::vector<unsigned char> data;
+  createScreenShot(data, monitorsToDisplay);
+  SaveVectorToFile(filename, data);
 }
