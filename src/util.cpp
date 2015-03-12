@@ -249,91 +249,112 @@ int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
   return -1;  // Failure
 }
 
-void split(const std::string &s, char delim, std::vector<std::wstring> &elems) {
-  std::stringstream ss(s);
-  std::vector<std::string> tmpVec;
-  std::string item;
-  bool b = false;
-  while (std::getline(ss, item, delim)) {
-    tmpVec.push_back(item);
-  }
-  for (unsigned i = 0; i < tmpVec.size(); i++)
+int split(const std::string &s, char delim, std::vector<std::wstring> &elems) {
+  try
   {
-    if (b){
-      b = false;
-      continue;
+    int err = 0;
+    std::stringstream ss(s);
+    std::vector<std::string> tmpVec;
+    std::string item;
+    bool b = false;
+    while (std::getline(ss, item, delim)) {
+      tmpVec.push_back(item);
     }
-    char c = tmpVec[i].at(0);
-    //check if the " character is found
-    //check if there is another argument
-    if (c == '\"' && i + 1 < tmpVec.size())
+    for (unsigned i = 0; i < tmpVec.size(); i++)
     {
-      b = true;
-      unsigned k = i;
-      for (; k < tmpVec.size(); k++){
-        if (i != k)
+      if (b){
+        b = false;
+        continue;
+      }
+      if (tmpVec[i].size()>0)
+      {
+        char c = tmpVec[i].at(0);
+        //check if the " character is found
+        //check if there is another argument
+        if (c == '\"' && i + 1 < tmpVec.size())
         {
-          tmpVec[i] += (" " + tmpVec[k]);
-        }
-        // first charater is '\"'
-        if (tmpVec[k].substr(1).find('\"') != std::string::npos)
-        {
-          tmpVec[i] = tmpVec[i].substr(1, tmpVec[i].size() - 1);
-          break;
-        }
+          b = true;
+          unsigned k = i;
+          for (; k < tmpVec.size(); k++){
+            if (i != k)
+            {
+              tmpVec[i] += (" " + tmpVec[k]);
+            }
+            // first charater is '\"'
+            size_t pos = tmpVec[k].substr(1).find('\"');
+            if (pos != std::string::npos)
+            {
+              tmpVec[i] = tmpVec[i].substr(1, tmpVec[i].size() - 2);
+              break;
+            }
 
+          }
+        }
+        std::wstring tmp(tmpVec[i].begin(), tmpVec[i].end());
+        elems.push_back(tmp);
       }
     }
-    std::wstring tmp(tmpVec[i].begin(), tmpVec[i].end());
-    elems.push_back(tmp);
 
   }
-  // 
+  catch (std::exception& e)
+  {
+    e.what();
+    return 12;
+  }
+  return 0;
 }
 
-void getScreenShotByWindowTitleOrRect(HWND windowSearched, wchar_t* filename, RECT rect, bool rectProvided)
+int getScreenShotByWindowTitleOrRect(HWND windowSearched, wchar_t* filename, RECT rect, bool rectProvided)
 {
-
-  // If windowSearched and rectangle was provided we should recalculate rectangle to the windowSearched coordinates 
-  if (windowSearched && rectProvided)
+  try
   {
-    RECT wrect;
-    GetWindowRect(windowSearched, &wrect);
-    OffsetRect(&rect, wrect.left, wrect.top);
+    // If windowSearched and rectangle was provided we should recalculate rectangle to the windowSearched coordinates 
+    if (windowSearched && rectProvided)
+    {
+      RECT wrect;
+      GetWindowRect(windowSearched, &wrect);
+      OffsetRect(&rect, wrect.left, wrect.top);
+    }
+
+    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+    ULONG_PTR gdiplusToken;
+    Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
+    HWND desktop = GetDesktopWindow();
+    HDC desktopdc = GetDC(desktop);
+    HDC mydc = CreateCompatibleDC(desktopdc);
+
+    int width = (rect.right - rect.left == 0) ? GetSystemMetrics(SM_CXSCREEN) : rect.right - rect.left;
+    int height = (rect.bottom - rect.top == 0) ? GetSystemMetrics(SM_CYSCREEN) : rect.bottom - rect.top;
+
+    HBITMAP mybmp = CreateCompatibleBitmap(desktopdc, width, height);
+    HBITMAP oldbmp = (HBITMAP)SelectObject(mydc, mybmp);
+    BitBlt(mydc, 0, 0, width, height, desktopdc, rect.left, rect.top, SRCCOPY | CAPTUREBLT);
+    SelectObject(mydc, oldbmp);
+
+    if (windowSearched) SetWindowPos(windowSearched, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+
+    Gdiplus::Bitmap* b = Gdiplus::Bitmap::FromHBITMAP(mybmp, NULL);
+    CLSID  encoderClsid;
+    Gdiplus::Status stat = Gdiplus::GenericError;
+    if (b && GetEncoderClsid(L"image/png", &encoderClsid) != -1) {
+      stat = b->Save(filename, &encoderClsid, NULL);
+    }
+    if (b)
+      delete b;
+
+    // cleanup
+    Gdiplus::GdiplusShutdown(gdiplusToken);
+    ReleaseDC(desktop, desktopdc);
+    DeleteObject(mybmp);
+    DeleteDC(mydc);
   }
-
-  Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-  ULONG_PTR gdiplusToken;
-  Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-
-  HWND desktop = GetDesktopWindow();
-  HDC desktopdc = GetDC(desktop);
-  HDC mydc = CreateCompatibleDC(desktopdc);
-
-  int width = (rect.right - rect.left == 0) ? GetSystemMetrics(SM_CXSCREEN) : rect.right - rect.left;
-  int height = (rect.bottom - rect.top == 0) ? GetSystemMetrics(SM_CYSCREEN) : rect.bottom - rect.top;
-
-  HBITMAP mybmp = CreateCompatibleBitmap(desktopdc, width, height);
-  HBITMAP oldbmp = (HBITMAP)SelectObject(mydc, mybmp);
-  BitBlt(mydc, 0, 0, width, height, desktopdc, rect.left, rect.top, SRCCOPY | CAPTUREBLT);
-  SelectObject(mydc, oldbmp);
-
-  if (windowSearched) SetWindowPos(windowSearched, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-
-  Gdiplus::Bitmap* b = Gdiplus::Bitmap::FromHBITMAP(mybmp, NULL);
-  CLSID  encoderClsid;
-  Gdiplus::Status stat = Gdiplus::GenericError;
-  if (b && GetEncoderClsid(L"image/png", &encoderClsid) != -1) {
-    stat = b->Save(filename, &encoderClsid, NULL);
+  catch (std::exception& e)
+  {
+    e.what();
+    return 8;
   }
-  if (b)
-    delete b;
-
-  // cleanup
-  Gdiplus::GdiplusShutdown(gdiplusToken);
-  ReleaseDC(desktop, desktopdc);
-  DeleteObject(mybmp);
-  DeleteDC(mydc);
+  return 0;
 }
 // for all desktops 
 

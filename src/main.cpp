@@ -6,20 +6,23 @@
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "gdiplus.lib")
 
+ 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 { 
-  unsigned errorReportingLevel = 0;
   // err 2  - window not found by title 
   // err 4  - internal error 
-  // err 8  - can't write to file 
-  short error; 
+  // err 8  - can't write to file
+  // err 12 - problem parsing arguments 
+  short error = 0;
+  unsigned errorReportingLevel = 0;
   bool monitorsSpecified = false;
   bool windowNotFound = false; 
   std::vector<int>monitorsToDisplay;
   std::vector<std::wstring> arguments; 
   // parse command line arguments 
-  split(lpCmdLine, ' ', arguments);
+  error = split(lpCmdLine, ' ', arguments);
+
   HWND windowSearched = NULL;
   RECT rect = { 0 };
   wchar_t filename[MAX_PATH] = { 0 };
@@ -75,6 +78,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     error = 2;
     return error;
   }
+  if (error  && errorReportingLevel > 0)
+  {
+    return error; 
+  }
   // if filename is not set  => default value
   if (wcslen(filename) == 0) wcscpy_s(filename, L"screenshot.png");
   // found window by title 
@@ -94,5 +101,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
   
   }
-  return 0;
+  return error;
 }
