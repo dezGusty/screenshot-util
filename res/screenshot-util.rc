@@ -61,13 +61,13 @@ BEGIN
     BEGIN
         BLOCK "000004b0"
         BEGIN
-            VALUE "CompanyName", "My company"
-            VALUE "FileDescription", "ESC Key Pressing Utility"
+            VALUE "CompanyName", "AwesomeCompany.inc"
+            VALUE "FileDescription", "Screenshot utility"
             VALUE "FileVersion", SCRSHT_UTL_STR_FILE_VERSION
-            VALUE "InternalName", "esc kpu"
-            VALUE "LegalCopyright", "Me"
-            VALUE "OriginalFilename", "rcProject.exe"
-            VALUE "ProductName", "Esc Key Pressing Utility"
+            VALUE "InternalName", "scrsch-utl"
+            VALUE "LegalCopyright", "Vlad&Me"
+            VALUE "OriginalFilename", "screenshot-util.exe"
+            VALUE "ProductName", "Screenshot util"
             VALUE "ProductVersion", SCRSHT_UTL_STR_PROD_VERSION
         END
     END
