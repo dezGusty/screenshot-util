@@ -38,7 +38,7 @@
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_GUS_APP_ICON        ICON                    "..\\res\\images.ico"
+IDI_GUS_APP_ICON        ICON                    "..\\res\\icon.ico"
 
 //
 // Version
