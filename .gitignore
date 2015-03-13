@@ -27,6 +27,8 @@
 *.out
 *.app
 
+#ignore build folder
+build/
 # Solution temp files
 *.sdf
 *.suo
