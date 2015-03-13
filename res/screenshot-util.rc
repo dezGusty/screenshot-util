@@ -61,11 +61,11 @@ BEGIN
     BEGIN
         BLOCK "000004b0"
         BEGIN
-            VALUE "CompanyName", "AwesomeCompany.inc"
+            VALUE "CompanyName", "Screenshot-util team"
             VALUE "FileDescription", "Screenshot utility"
             VALUE "FileVersion", SCRSHT_UTL_STR_FILE_VERSION
             VALUE "InternalName", "scrsch-utl"
-            VALUE "LegalCopyright", "Vlad&Me"
+            VALUE "LegalCopyright", "Screenshot-util team"
             VALUE "OriginalFilename", "screenshot-util.exe"
             VALUE "ProductName", "Screenshot util"
             VALUE "ProductVersion", SCRSHT_UTL_STR_PROD_VERSION

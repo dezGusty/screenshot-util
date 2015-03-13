@@ -1,11 +1,11 @@
 #ifndef SCRSHT_UTL_VERSION_HPP
 #define SCRSHT_UTL_VERSION_HPP
 
-//   This file is part of the "ESC Key Pressing Utility", licensed under 
+//   This file is part of the "SCreenshot Utility", licensed under 
 //   the terms of the MIT License (seen below).
 //
 //   The MIT License
-//   Copyright (C) 2015  Augustin Preda (thegusty999@gmail.com)
+//   Copyright (C) 2015  Screenshot utility team (thegusty999@gmail.com)
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy
 //   of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 //
 
 //
-// This file provides version information for the ESC key pressing utility.
+// This file provides version information for the Screenshot utility.
 // The information must be updated manually.
 //
 
@@ -68,12 +68,12 @@
 //
 
 // Major versiom
-#define SCRSHT_UTL_NUM_MAJOR_VER_SIMPLE 1
+#define SCRSHT_UTL_NUM_MAJOR_VER_SIMPLE 0
 
 // Minor versions. Please keep in sync!
-#define SCRSHT_UTL_NUM_MINOR_VER_SIMPLE 0
-#define SCRSHT_UTL_NUM_MINOR_VER_2DIGITS 00
-#define SCRSHT_UTL_NUM_MINOR_VER_3DIGITS 000
+#define SCRSHT_UTL_NUM_MINOR_VER_SIMPLE  1
+#define SCRSHT_UTL_NUM_MINOR_VER_2DIGITS 01
+#define SCRSHT_UTL_NUM_MINOR_VER_3DIGITS 001
 
 // Patch versions. Please keep in sync!
 #define SCRSHT_UTL_NUM_PATCH_VER_SIMPLE 0.0
@@ -83,18 +83,18 @@
 // Also define string adaptations
 //
 
-//  EKPU_NUM_VERSION % 100 is the patch level
-//  EKPU_NUM_VERSION / 100 % 1000 is the minor version
-//  EKPU_NUM_VERSION / 100000 is the major version
+//  SCRSHT_NUM_VERSION % 100 is the patch level
+//  SCRSHT_NUM_VERSION / 100 % 1000 is the minor version
+//  SCRSHT_NUM_VERSION / 100000 is the major version
 
-// E.g: EKPU_NUM_VERSION 100000
+// E.g: SCRSHT_NUM_VERSION 100000
 //                         ____XX = patch
 //                         _XXX__ = minor version
 //                         X_____ = major version
 
 #define SCRSHT_UTL_NUM_VERSION PPCAT(SCRSHT_UTL_NUM_MAJOR_VER_SIMPLE,PPCAT(SCRSHT_UTL_NUM_MINOR_VER_3DIGITS,SCRSHT_UTL_NUM_PATCH_VER_2DIGITS))
 
-//  EKPU_STRING_VERSION should be defined by the user to have the same value as EKPU_NUM_VERSION, but as a string, in the form
+//  SCRSHT_STRING_VERSION should be defined by the user to have the same value as SCRSHT_NUM_VERSION, but as a string, in the form
 //  "x_y[_z]", where "x" is the major version number, "y" is the minor version number, and "z" (optional) is the patch level. (if the patch level is 0,
 //  you should just skip it).
 
@@ -112,4 +112,4 @@
 
 
 
-#endif // EKPU_VERSION_HPP
+#endif // SCRSHT_VERSION_HPP
