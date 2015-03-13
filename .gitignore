@@ -39,6 +39,7 @@ build/
 *.idb
 *.lastbuildstate
 *.res
+*.Build.CppClean.log
 
 #ignore PNG
 *.png
