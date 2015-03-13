@@ -1,22 +1,23 @@
-﻿Build started 3/13/2015 10:52:33 AM.
-     1>Project "C:\Users\Petru.barko\Documents\Projects\screenshot-util\solution\screenshot-util\screenshot-util.vcxproj" on node 2 (Build target(s)).
-     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(364,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
+﻿Build started 3/13/2015 11:24:15 AM.
+     1>Project "C:\Users\Krull\Documents\GitHub\screenshot-util\solution\screenshot-util\screenshot-util.vcxproj" on node 2 (Build target(s)).
+     1>C:\Program Files\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(357,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\src\main.cpp
+         C:\Program Files\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"C:\Program Files\Visual Leak Detector\include" /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\src\main.cpp
          main.cpp
-     1>c:\users\petru.barko\documents\projects\screenshot-util\src\main.cpp(32): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\petru.barko\documents\projects\screenshot-util\src\main.cpp(35): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\petru.barko\documents\projects\screenshot-util\src\main.cpp(51): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\petru.barko\documents\projects\screenshot-util\src\main.cpp(60): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\petru.barko\documents\projects\screenshot-util\src\main.cpp(65): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\petru.barko\documents\projects\screenshot-util\src\main.cpp(71): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\krull\documents\github\screenshot-util\src\main.cpp(77): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\krull\documents\github\screenshot-util\src\main.cpp(80): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\krull\documents\github\screenshot-util\src\main.cpp(96): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\krull\documents\github\screenshot-util\src\main.cpp(105): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\krull\documents\github\screenshot-util\src\main.cpp(110): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\krull\documents\github\screenshot-util\src\main.cpp(116): warning C4018: '<' : signed/unsigned mismatch
+     1>cl : Command line warning D9028: minimal rebuild failure, reverting to normal build
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"..\..\build\screenshot-util.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"..\..\build\screenshot-util.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"..\..\build\screenshot-util.lib" /MACHINE:X86 "Debug\screenshot-util.res"
+         C:\Program Files\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"..\..\build\screenshot-util.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files\Visual Leak Detector\lib\Win32" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"..\..\build\screenshot-util.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"..\..\build\screenshot-util.lib" /MACHINE:X86 "Debug\screenshot-util.res"
          Debug\main.obj
          Debug\util.obj
-         screenshot-util.vcxproj -> C:\Users\Petru.barko\Documents\Projects\screenshot-util\solution\screenshot-util\..\..\build\screenshot-util.exe
-     1>Done Building Project "C:\Users\Petru.barko\Documents\Projects\screenshot-util\solution\screenshot-util\screenshot-util.vcxproj" (Build target(s)).
+         screenshot-util.vcxproj -> C:\Users\Krull\Documents\GitHub\screenshot-util\solution\screenshot-util\..\..\build\screenshot-util.exe
+     1>Done Building Project "C:\Users\Krull\Documents\GitHub\screenshot-util\solution\screenshot-util\screenshot-util.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:01.70
+Time Elapsed 00:00:03.66

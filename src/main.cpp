@@ -5,11 +5,56 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "gdiplus.lib")
+/*
+SYNOPSIS:
+screenshot[-wt WINDOW_TITLE | -rc LEFT TOP RIGHT BOTTOM | -mn MONITOR_VALUE |-o FILENAME | -h]
 
- 
+OPTIONS :
+-wt     WINDOW_TITLE                Select window with this title.
 
+-rc     LEFT TOP RIGHT BOTTOM       Crop source.If no WINDOW_TITLE is provided
+(0, 0) is left top corner of desktop,
+else if WINDOW_TITLE maches a desktop window
+(0, 0) is it's top left corner.
+
+-mn     MONITOR VALUE               Specify what monitors the program should take a
+screeenshot of. Separate values through commas
+[ex. 1,2]. This option is ignored if WINDOW_TITLE
+is provided.
+
+-o FILENAME                         Output file name, if none, the image will be saved
+as "screenshot.png" in the current working directory.
+-h
+Shows this help info.
+
+*/
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{ 
+{
+  std::wstring helpString = L"\tscreenshot-util -\tSave a screenshot of the Windows desktop\n\t\t\tor window in .png format.\n\n" \
+    L"SYNOPSIS:\n"\
+    L"\tscreenshot [ -wt WINDOW_TITLE |\n\t\t    -rc LEFT TOP RIGHT BOTTOM |\n\t\t    -wn MONITOR_VALUE|\n\t\t    -o  FILENAME |\n\t\t    -h help]\n\n"\
+    L"OPTIONS:\n"\
+    L"\t-wt WINDOW_TITLE\n"\
+    L"\t\t\tSelect window with this title.\n\t\t\t\n"\
+    L"\t-rc LEFT TOP RIGHT BOTTOM\n"\
+    L"\t\t\tCrop source. If no WINDOW_TITLE is provided\n"\
+    L"\t\t\t(0,0) is left top corner of desktop,\n"\
+    L"\t\t\telse if WINDOW_TITLE maches a desktop window\n"\
+    L"\t\t\t(0,0) is it's top left corner.\n"\
+    L"\t-mn MONITOR_VALUE\n"\
+    L"\t\t\tSpecify what monitors the program should take a \n"
+    L"\t\t\tscreeenshot of.Separate values through commas \n"
+    L"\t\t\t[ex. 1, 2].This option is ignored if WINDOW_TITLE \n"
+    L"\t\t\tis provided. Monitor values coincide with \n"
+    L"\t\t\tthose found @ Control Panel\\All Control Panel\n" \
+    L"\t\t\tItems\\Display\\Screen Resolution \n"
+    L"\t-o FILENAME\n"\
+    L"\t\t\tOutput file name, if none, the image will be saved\n"\
+    L"\t\t\tas \"screenshot.png\" in the current working \n"
+    L"\t\t\tdirectory.\n"\
+    L"\t-h\n"\
+    L"\t\t\tShows this help info.\n";
+
   // err 2  - window not found by title 
   // err 4  - internal error 
   // err 8  - can't write to file
@@ -17,9 +62,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   short error = 0;
   unsigned errorReportingLevel = 0;
   bool monitorsSpecified = false;
-  bool windowNotFound = false; 
+  bool windowNotFound = false;
   std::vector<int>monitorsToDisplay;
-  std::vector<std::wstring> arguments; 
+  std::vector<std::wstring> arguments;
   // parse command line arguments 
   error = split(lpCmdLine, ' ', arguments);
 
@@ -28,14 +73,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   wchar_t filename[MAX_PATH] = { 0 };
 
   bool rectProvided = false;
- 
+
   for (short i = 0; i < arguments.size(); i++)
   {
     // window title ptobided
     if (wcscmp(arguments[i].c_str(), L"-wt") == 0 && i + 1<arguments.size())
     {
       const wchar_t* seaching = arguments[i + 1].c_str();
-      windowSearched = FindWindowW(NULL, arguments[i+1].c_str());
+      windowSearched = FindWindowW(NULL, arguments[i + 1].c_str());
       if (windowSearched)
       {
         SetWindowPos(windowSearched, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
@@ -64,13 +109,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     //monitor number to display
     else if (wcscmp(arguments[i].c_str(), L"-mn") == 0 && i + 1 < arguments.size())
     {
-      parseMonitorsToDisplay(monitorsToDisplay,arguments[i + 1]);
+      parseMonitorsToDisplay(monitorsToDisplay, arguments[i + 1]);
       monitorsSpecified = true;
     }
     //error reporting level 
     else if (wcscmp(arguments[i].c_str(), L"-e") == 0 && i + 1 < arguments.size())
     {
       errorReportingLevel = _wtoi(arguments[i + 1].c_str());
+    }
+    else if (wcscmp(arguments[i].c_str(), L"-h") == 0)
+    {
+      MessageBox(NULL, helpString.c_str(), L"Help for screenshot-util", MB_OK);
     }
   }
   if (windowNotFound && errorReportingLevel > 0)
@@ -80,7 +129,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   }
   if (error  && errorReportingLevel > 0)
   {
-    return error; 
+    return error;
   }
   // if filename is not set  => default value
   if (wcslen(filename) == 0) wcscpy_s(filename, L"screenshot.png");
@@ -99,7 +148,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
       getAllDesktopsScreenshot(filename);
     }
-  
+
   }
   return error;
 }
