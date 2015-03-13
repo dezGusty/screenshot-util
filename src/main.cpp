@@ -63,6 +63,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   unsigned errorReportingLevel = 0;
   bool monitorsSpecified = false;
   bool windowNotFound = false;
+  bool separateScreenShots = false;
   std::vector<int>monitorsToDisplay;
   std::vector<std::wstring> arguments;
   // parse command line arguments 
@@ -117,9 +118,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
       errorReportingLevel = _wtoi(arguments[i + 1].c_str());
     }
+    //help
     else if (wcscmp(arguments[i].c_str(), L"-h") == 0)
     {
       MessageBox(NULL, helpString.c_str(), L"Help for screenshot-util", MB_OK);
+    }
+    //separate screenshots
+    else if (wcscmp(arguments[i].c_str(), L"-split") == 0)
+    {
+      separateScreenShots = true;
     }
   }
   if (windowNotFound && errorReportingLevel > 0)
@@ -142,11 +149,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   {
     if (monitorsSpecified)
     {
-      getSomeDesktopsScreenshot(filename, monitorsToDisplay);
+      if (separateScreenShots)
+      {
+        createScreenShotForEachDesktop(filename, monitorsToDisplay);
+      }
+      else
+      {
+        getSomeDesktopsScreenshot(filename, monitorsToDisplay);
+      }
     }
     else
     {
-      getAllDesktopsScreenshot(filename);
+      if (separateScreenShots)
+      {
+        createScreenShotForEachDesktop(filename, monitorsToDisplay);
+      }
+      else
+      {
+        getAllDesktopsScreenshot(filename);
+
+      }
+      
     }
 
   }

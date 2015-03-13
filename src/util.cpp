@@ -1,18 +1,24 @@
 #include "util.h"
 
+// splice catured hdc 
 void HDCPool::spliceImages(HDC &capture
   , HBITMAP & bmp
   , HGDIOBJ & originalBmp
   , int * width
   , int * height)
 {
+  // retrieves a handle to the device context
+  // _IN NULL retrives the DC for the entire screen 
   HDC hDesktopDC = GetDC(NULL);
- 
+  
+  // retrieve width of the virtual screen
   unsigned int nScreenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+  // retrieve height of the virtual screen 
   unsigned int nScreenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
   *width = nScreenWidth;
   *height = nScreenHeight;
 
+  // retrieve a value to a memory dc
   HDC hCaptureDC = CreateCompatibleDC(hDesktopDC);
   if (!hCaptureDC)
   {
@@ -414,4 +420,120 @@ void getSomeDesktopsScreenshot(const wchar_t* filename, const std::vector<int>& 
   std::vector<unsigned char> data;
   createScreenShot(data, monitorsToDisplay);
   SaveVectorToFile(filename, data);
+}
+//TODO: this is really bad, change it 
+
+class Temp{
+public:
+  std::vector<int> monitorsToDisplay;
+  int index = 1;
+  const wchar_t* filename;
+  Temp(const wchar_t* fileName, const std::vector<int>& vec)
+  {
+    filename = fileName;
+    monitorsToDisplay = vec;
+  }
+};
+
+BOOL CALLBACK MonitorEnumProc2(
+  HMONITOR hMonitor,    // handle to display monitor
+  HDC hdcMonitor,       // handle to monitor DC
+  LPRECT lprcMonitor,   // monitor intersection rectangle
+  LPARAM dwData         // data
+  )
+{
+  Temp* temp = reinterpret_cast<Temp*>(dwData);
+  if (temp->monitorsToDisplay.size() > 0){
+    auto result = std::find(std::begin(temp->monitorsToDisplay), std::end(temp->monitorsToDisplay), temp->index);
+    if (result != std::end(temp->monitorsToDisplay))
+    {
+      HBITMAP bmp;
+      HGDIOBJ originalBmp = NULL;
+      int height = 0;
+      int width = 0;
+      Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+      ULONG_PTR gdiplusToken;
+      Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
+      HWND desktop = GetDesktopWindow();
+      HDC desktopdc = GetDC(desktop);
+      HDC mydc = CreateCompatibleDC(desktopdc);
+
+      width = GetSystemMetrics(SM_CXSCREEN);
+      height = GetSystemMetrics(SM_CYSCREEN);
+
+      HBITMAP mybmp = CreateCompatibleBitmap(desktopdc, width, height);
+      HBITMAP oldbmp = (HBITMAP)SelectObject(mydc, mybmp);
+      BitBlt(mydc, 0, 0, width, height, desktopdc, lprcMonitor->left, lprcMonitor->top, SRCCOPY | CAPTUREBLT);
+      SelectObject(mydc, oldbmp);
+
+      Gdiplus::Bitmap* b = Gdiplus::Bitmap::FromHBITMAP(mybmp, NULL);
+      CLSID  encoderClsid;
+      Gdiplus::Status stat = Gdiplus::GenericError;
+      if (b && GetEncoderClsid(L"image/png", &encoderClsid) != -1) {
+        std::wstring tmp(temp->filename);
+        tmp = std::to_wstring(temp->index) + L"_" + tmp;
+        stat = b->Save(tmp.c_str(), &encoderClsid, NULL);
+      }
+      if (b)
+        delete b;
+
+      // cleanup
+      Gdiplus::GdiplusShutdown(gdiplusToken);
+      ReleaseDC(desktop, desktopdc);
+      DeleteObject(mybmp);
+      DeleteDC(mydc);
+    }
+  }
+  else
+  {
+    HBITMAP bmp;
+    HGDIOBJ originalBmp = NULL;
+    int height = 0;
+    int width = 0;
+    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+    ULONG_PTR gdiplusToken;
+    Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
+    HWND desktop = GetDesktopWindow();
+    HDC desktopdc = GetDC(desktop);
+    HDC mydc = CreateCompatibleDC(desktopdc);
+
+    width = GetSystemMetrics(SM_CXSCREEN);
+    height = GetSystemMetrics(SM_CYSCREEN);
+
+    HBITMAP mybmp = CreateCompatibleBitmap(desktopdc, width, height);
+    HBITMAP oldbmp = (HBITMAP)SelectObject(mydc, mybmp);
+    BitBlt(mydc, 0, 0, width, height, desktopdc, lprcMonitor->left, lprcMonitor->top, SRCCOPY | CAPTUREBLT);
+    SelectObject(mydc, oldbmp);
+
+    Gdiplus::Bitmap* b = Gdiplus::Bitmap::FromHBITMAP(mybmp, NULL);
+    CLSID  encoderClsid;
+    Gdiplus::Status stat = Gdiplus::GenericError;
+    if (b && GetEncoderClsid(L"image/png", &encoderClsid) != -1) {
+      std::wstring tmp(temp->filename);
+      tmp = std::to_wstring(temp->index) + L"_" + tmp;
+      stat = b->Save(tmp.c_str(), &encoderClsid, NULL);
+    }
+    if (b)
+      delete b;
+
+    // cleanup
+    Gdiplus::GdiplusShutdown(gdiplusToken);
+    ReleaseDC(desktop, desktopdc);
+    DeleteObject(mybmp);
+    DeleteDC(mydc);
+  }
+  temp->index++;
+  return true;
+}
+
+void createScreenShotForEachDesktop(const wchar_t* filename, const std::vector<int>& monitorsToDisplay)
+{
+  
+  Temp temp(filename, monitorsToDisplay);
+  int index;
+  HDC hDesktopDC = GetDC(NULL);
+  EnumDisplayMonitors(hDesktopDC, NULL, MonitorEnumProc2, reinterpret_cast<LPARAM>(&temp));
+
 }
