@@ -16,6 +16,9 @@
 // final screenshot height = height of the tallest screenshot
 void createScreenShot(std::vector<unsigned char>& data, std::vector<int> monitorsToDisplay);
 
+void createScreenShotForEachDesktop(const wchar_t* filename, const std::vector<int>& monitorsToDisplay);
+
+
 //format type
 int GetEncoderClsid(const WCHAR* format, CLSID* pClsid);
 
@@ -50,13 +53,13 @@ typedef std::vector<std::pair<HDC, RECT>> HDCPoolType;
 
 // model can be found @ http://www.codeproject.com/Articles/101272/Creation-of-Multi-monitor-Screenshots-Using-WinAPI
 class HDCPool{
-  HDCPoolType hdcPool;
 public:
+  HDCPoolType hdcPool;
   //total width of the output screenshot. Represents the width of all monitors selected
   int totalWidth = 0;
   // height of the output screenshot. Represents the height of the tallest monitor. 
   int totalHeight = 0;
-  
+
   // monitors to display
   // value of monitors coincides with those found @ Control Panelo\Display\Screen Resolution
   std::vector<int> monitorsToDisplay;
@@ -66,14 +69,15 @@ public:
   HDCPoolType::iterator iterator;
   HDCPool(){}
   ~HDCPool(){}
- 
+
   // if the monitor is selected adds it's context and rect to the hdcPool
   // Height and Width used to compute final screenshot dimmensions
-  void addToPool(HDC hdc, RECT rect,int Height, int Width);
+  void addToPool(HDC hdc, RECT rect, int Height, int Width);
   // iterate through all availible desktops
   void iterateThroughDesktops();
 
   //splice screenshots of individual monitors together
   void spliceImages(HDC &capture, HBITMAP & bmp, HGDIOBJ & originalBmp, int * width, int * height);
+
 };
 #endif 
