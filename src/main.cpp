@@ -30,7 +30,7 @@
 #pragma comment(lib, "gdiplus.lib")
 /*
 SYNOPSIS:
-screenshot[-wt WINDOW_TITLE | -rc LEFT TOP RIGHT BOTTOM | -mn MONITOR_VALUE |-o FILENAME | -h]
+screenshot[-wt WINDOW_TITLE | -rc LEFT TOP RIGHT BOTTOM | -mn MONITOR_VALUE |-o FILENAME | -h | -split]
 
 OPTIONS :
 -wt     WINDOW_TITLE                Select window with this title.
@@ -47,8 +47,11 @@ is provided.
 
 -o FILENAME                         Output file name, if none, the image will be saved
 as "screenshot.png" in the current working directory.
+
 -h
 Shows this help info.
+
+-split                              Splits screenshots of different desktops (if any) into different pngs    
 
 */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -76,7 +79,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     L"\t\t\tas \"screenshot.png\" in the current working \n"
     L"\t\t\tdirectory.\n"\
     L"\t-h\n"\
-    L"\t\t\tShows this help info.\n";
+    L"\t\t\tShows this help info.\n"\
+    L"\t-split\n"\
+    L"\t\t\t Splits screenshots of different desktops (if any)\n"
+    L"\t\t\tinto different pngs.\n";
 
   // err 2  - window not found by title 
   // err 4  - internal error 
