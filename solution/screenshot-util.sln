@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2013 for Windows Desktop
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "screenshot-util", "screenshot-util\screenshot-util.vcxproj", "{CDF38A38-D6B0-405C-9C60-4ED5BE3D59B5}"
 EndProject
@@ -9,7 +9,6 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Release - Static|Win32 = Release - Static|Win32
-		Release -Static|Win32 = Release -Static|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
@@ -17,8 +16,6 @@ Global
 		{CDF38A38-D6B0-405C-9C60-4ED5BE3D59B5}.Debug|Win32.Build.0 = Debug|Win32
 		{CDF38A38-D6B0-405C-9C60-4ED5BE3D59B5}.Release - Static|Win32.ActiveCfg = Release|Win32
 		{CDF38A38-D6B0-405C-9C60-4ED5BE3D59B5}.Release - Static|Win32.Build.0 = Release|Win32
-		{CDF38A38-D6B0-405C-9C60-4ED5BE3D59B5}.Release -Static|Win32.ActiveCfg = Release|Win32
-		{CDF38A38-D6B0-405C-9C60-4ED5BE3D59B5}.Release -Static|Win32.Build.0 = Release|Win32
 		{CDF38A38-D6B0-405C-9C60-4ED5BE3D59B5}.Release|Win32.ActiveCfg = Release|Win32
 		{CDF38A38-D6B0-405C-9C60-4ED5BE3D59B5}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection

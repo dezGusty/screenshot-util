@@ -1,3 +1,27 @@
+//   This file is part of the screenshot-util program, licensed under the terms of the MIT License.
+//
+//   The MIT License
+//   Copyright (C) 2010-2014  The screenshot-util team (See AUTHORS file)
+//
+//   Permission is hereby granted, free of charge, to any person obtaining a copy
+//   of this software and associated documentation files (the "Software"), to deal
+//   in the Software without restriction, including without limitation the rights
+//   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//   copies of the Software, and to permit persons to whom the Software is
+//   furnished to do so, subject to the following conditions:
+//
+//   The above copyright notice and this permission notice shall be included in
+//   all copies or substantial portions of the Software.
+//
+//   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//   THE SOFTWARE.
+
+
 #include "util.h"
 
 // splice catured hdc 
@@ -20,19 +44,22 @@ void HDCPool::spliceImages(HDC &capture
 
   // retrieve a value to a memory dc
   HDC hCaptureDC = CreateCompatibleDC(hDesktopDC);
+
+  // reset device context 
   if (!hCaptureDC)
   {
     throw std::runtime_error("SpliceImages: CreateCompatibleDC failed");
   }
   capture = hCaptureDC;
 
+  // retrieve compatible bitmap
   HBITMAP hCaptureBmp = CreateCompatibleBitmap(hDesktopDC, nScreenWidth, nScreenHeight);
   if (!hCaptureBmp)
   {
     throw std::runtime_error("SpliceImages: CreateCompatibleBitmap failed");
   }
   bmp =hCaptureBmp;
-
+  // load bitmap into device context
   originalBmp = SelectObject(hCaptureDC, hCaptureBmp);
   if (!originalBmp || (originalBmp == (HBITMAP)GDI_ERROR))
   {
@@ -67,19 +94,27 @@ void CaptureDesktop(HDC desktop   // handle to monitor DC
   , int left
   , int top)
 {
+  // get screen width
   unsigned int nScreenWidth = GetDeviceCaps(desktop, HORZRES);
+
+  // get screen height
   unsigned int nScreenHeight = GetDeviceCaps(desktop, VERTRES);
 
   *height = nScreenHeight;
   *width = nScreenWidth;
+  
+  // create compatible device context 
   HDC hCaptureDC = CreateCompatibleDC(desktop);
 
+  //reset handle to device context 
   if (capture)
     CloseHandle(capture);
   capture = hCaptureDC;
 
+  // create bitmap 
   HBITMAP hCaptureBmp = CreateCompatibleBitmap(desktop, *width, *height);
 
+  // reset bmp 
   if (bmp)
     DeleteObject(bmp);
   bmp = hCaptureBmp;
@@ -87,12 +122,12 @@ void CaptureDesktop(HDC desktop   // handle to monitor DC
   // Selecting an object for the specified DC
   originalBmp = SelectObject(hCaptureDC, hCaptureBmp);
 
-  // Selecting an object for the specified DC
-  originalBmp = SelectObject(hCaptureDC, hCaptureBmp);
-
+  // bit-block transfer of the color data into the device context 
   BitBlt(hCaptureDC, 0, 0, nScreenWidth, nScreenHeight, desktop, left, top, SRCCOPY | CAPTUREBLT);
 }
 
+// iterate through each desktop, check if desktop should be screenshoted 
+// add the context and the rectangle of the desktop to the hdcPool
 BOOL CALLBACK MonitorEnumProc(
   HMONITOR hMonitor,    // handle to display monitor
   HDC hdcMonitor,       // handle to monitor DC
@@ -100,41 +135,54 @@ BOOL CALLBACK MonitorEnumProc(
   LPARAM dwData         // data
   )
 {
-  static int desktopNum = 0;
-  desktopNum++;
-  
   HBITMAP bmp;
   HGDIOBJ originalBmp = NULL;
   int height = 0;
   int width = 0;
+
+  //get handles
   HDC desktop(hdcMonitor);
   HDC capture(0);
 
+  // data sent between callbacks
   HDCPool * hdcPool = reinterpret_cast<HDCPool *>(dwData);
+  // increment desktop number 
+  hdcPool->desktopNum++;
+
+  // check if program should check which monitors to screenshot 
   if (hdcPool->checkMonitor)
   {
-    auto result = std::find(std::begin(hdcPool->monitorsToDisplay), std::end(hdcPool->monitorsToDisplay), desktopNum);
+    // check if monitor should be screenshoted 
+    auto result = std::find(std::begin(hdcPool->monitorsToDisplay), std::end(hdcPool->monitorsToDisplay), hdcPool->desktopNum++);
     if (result != std::end(hdcPool->monitorsToDisplay))
     {
+      //fill bitmap with current desktop 
       CaptureDesktop(desktop, capture, bmp,
         originalBmp, &width, &height, lprcMonitor->left, lprcMonitor->top);
-
+      
+      // save monitor coordinates 
       RECT rect = *lprcMonitor;
-      hdcPool->addToPool(capture, rect, height, width);
+      hdcPool->addToPool(capture, rect, height, width); // TODO(Vlad): height and width can be extracted from width
+                                                        // no need to to pass extra parameters. 
     }
   }
+  // 
   else
   {
+    //fill bitmap with current desktop 
     CaptureDesktop(desktop, capture, bmp,
       originalBmp, &width, &height, lprcMonitor->left, lprcMonitor->top);
 
     RECT rect = *lprcMonitor;
-    hdcPool->addToPool(capture, rect,height, width);
+    hdcPool->addToPool(capture, rect,height, width);    // TODO(Vlad): height and width can be extracted from rect
+                                                        // no need to to pass extra parameters. 
   }
   
+  // return true to keep iterating through all valid desktops 
   return true;
 }
 
+// save device context handle and coordinates from current desktop 
 void HDCPool::addToPool(HDC hdc, RECT rect,int Height, int Width)
 {
   hdcPool.push_back(std::pair<HDC, RECT>(hdc, rect));
@@ -144,16 +192,27 @@ void HDCPool::addToPool(HDC hdc, RECT rect,int Height, int Width)
   }
   
 }
+
 void HDCPool::iterateThroughDesktops()
 {
+  // get handle to main desktop 
   HDC hDesktopDC = GetDC(NULL);
+  
+  //start iterating though desktops 
+  // @IN HDC   - defines visible region of interset 
+  // @IN LPCRECT  - defines clipping rectangle 
+  // @IN MONITORENUMPROC  - defines callback function 
+  // @IN LPARAM - data sent between callbacks 
   EnumDisplayMonitors(hDesktopDC, NULL, MonitorEnumProc, reinterpret_cast<LPARAM>(this));
 }
 
+ // @OUT std::vector<unsigned char>& data -- final screenshot data 
 void createBitmapFinal(std::vector<unsigned char> & data, HDC &capture, HBITMAP & bmp, HGDIOBJ & originalBmp, int nScreenWidth, int nScreenHeight)
 {
   // save data to buffer
   unsigned char charBitmapInfo[sizeof(BITMAPINFOHEADER)+256 * sizeof(RGBQUAD)] = { 0 };
+
+  // load buffer into header defining the dib(device independet bitmap)
   LPBITMAPINFO lpbi = (LPBITMAPINFO)charBitmapInfo;
   lpbi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
   lpbi->bmiHeader.biHeight = nScreenHeight;
@@ -162,8 +221,11 @@ void createBitmapFinal(std::vector<unsigned char> & data, HDC &capture, HBITMAP 
   lpbi->bmiHeader.biBitCount = 32;
   lpbi->bmiHeader.biCompression = BI_RGB;
 
+  //load bitmap into selected device context 
   SelectObject(capture, originalBmp);
 
+  // GetDIBits function retrieves the bits of the specified compatible bitmap 
+  // and copies them into a buffer as a DIB using the specified format.
   if (!GetDIBits(capture, bmp, 0, nScreenHeight, NULL, lpbi, DIB_RGB_COLORS))
   {
     int err = GetLastError();
@@ -206,6 +268,9 @@ void createBitmapFinal(std::vector<unsigned char> & data, HDC &capture, HBITMAP 
   memcpy(&data[sizeof(BITMAPFILEHEADER)], &lpbi->bmiHeader, sizeof(BITMAPINFOHEADER));
 
 }
+// iterate through valid desktops
+// splice bitmaps 
+// retrieve final vector containing spliced bitmaps
 void createScreenShot(std::vector<unsigned char>& data, std::vector<int> monitorsToDisplay){
   HDC capture;
   HBITMAP bmp;
@@ -255,6 +320,7 @@ int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
   return -1;  // Failure
 }
 
+//split string on delim 
 int split(const std::string &s, char delim, std::vector<std::wstring> &elems) {
   try
   {
@@ -263,6 +329,7 @@ int split(const std::string &s, char delim, std::vector<std::wstring> &elems) {
     std::vector<std::string> tmpVec;
     std::string item;
     bool b = false;
+    // read split arguments into temp vector
     while (std::getline(ss, item, delim)) {
       tmpVec.push_back(item);
     }
@@ -272,6 +339,7 @@ int split(const std::string &s, char delim, std::vector<std::wstring> &elems) {
         b = false;
         continue;
       }
+      // don't add empty entries to final vector
       if (tmpVec[i].size()>0)
       {
         char c = tmpVec[i].at(0);
@@ -279,6 +347,10 @@ int split(const std::string &s, char delim, std::vector<std::wstring> &elems) {
         //check if there is another argument
         if (c == '\"' && i + 1 < tmpVec.size())
         {
+          // if no end '\"' symbol is found keep iterating until the 
+          // end of the temporary vector
+
+          // skip next iteration of enclosing vector
           b = true;
           unsigned k = i;
           for (; k < tmpVec.size(); k++){
@@ -296,6 +368,7 @@ int split(const std::string &s, char delim, std::vector<std::wstring> &elems) {
 
           }
         }
+        // create wstring from string and add it to final vector. 
         std::wstring tmp(tmpVec[i].begin(), tmpVec[i].end());
         elems.push_back(tmp);
       }
@@ -305,6 +378,7 @@ int split(const std::string &s, char delim, std::vector<std::wstring> &elems) {
   catch (std::exception& e)
   {
     e.what();
+    //error reading arguments
     return 12;
   }
   return 0;
@@ -321,25 +395,37 @@ int getScreenShotByWindowTitleOrRect(HWND windowSearched, wchar_t* filename, REC
       GetWindowRect(windowSearched, &wrect);
       OffsetRect(&rect, wrect.left, wrect.top);
     }
-
+    // instantiate gdi
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;
     Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+    // get handles 
     HWND desktop = GetDesktopWindow();
     HDC desktopdc = GetDC(desktop);
     HDC mydc = CreateCompatibleDC(desktopdc);
 
+    // get final width and height
     int width = (rect.right - rect.left == 0) ? GetSystemMetrics(SM_CXSCREEN) : rect.right - rect.left;
     int height = (rect.bottom - rect.top == 0) ? GetSystemMetrics(SM_CYSCREEN) : rect.bottom - rect.top;
 
+    // create compatible bitmap 
     HBITMAP mybmp = CreateCompatibleBitmap(desktopdc, width, height);
+
+    // load created bitmap into device context 
     HBITMAP oldbmp = (HBITMAP)SelectObject(mydc, mybmp);
+
+    // This function transfers pixels from a specified source rectangle to a specified destination rectangle, 
+    // altering the pixels according to the selected raster operation (ROP) code.
     BitBlt(mydc, 0, 0, width, height, desktopdc, rect.left, rect.top, SRCCOPY | CAPTUREBLT);
+
+    // load bitmap into device context 
     SelectObject(mydc, oldbmp);
 
+    // retain window position and size and display it 
     if (windowSearched) SetWindowPos(windowSearched, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
 
+    //save it to localdisk
     Gdiplus::Bitmap* b = Gdiplus::Bitmap::FromHBITMAP(mybmp, NULL);
     CLSID  encoderClsid;
     Gdiplus::Status stat = Gdiplus::GenericError;
@@ -366,36 +452,42 @@ int getScreenShotByWindowTitleOrRect(HWND windowSearched, wchar_t* filename, REC
 
 void SaveVectorToFile(const wchar_t* fileName, const std::vector<unsigned char>& data)
 {
+  // instantiate gdi 
   Gdiplus::GdiplusStartupInput gdiplusStartupInput;
   ULONG_PTR gdiplusToken;
   Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+  // gdi has no method to create bitmap from vector, 
+  // but it does have one for streams
   Gdiplus::Bitmap* pBitmap = NULL;
   IStream* pStream = NULL;
 
   HRESULT hResult = ::CreateStreamOnHGlobal(NULL, TRUE, &pStream);
   if (hResult == S_OK && pStream)
   {
+    // write from buffer to stream 
     hResult = pStream->Write(&data[0], ULONG(data.size()), NULL);
     if (hResult == S_OK)
+    {
+      // create bitmap from stream
       pBitmap = Gdiplus::Bitmap::FromStream(pStream, 1);
-
+    }
+     
+    // write to localdisk 
     CLSID  encoderClsid;
     Gdiplus::Status stat = Gdiplus::GenericError;
     if (pBitmap && GetEncoderClsid(L"image/png", &encoderClsid) != -1) {
       stat = pBitmap->Save(fileName, &encoderClsid, NULL);
     }
+    //reset bitmap and pStream
     if (pBitmap)
       delete pBitmap;
     pStream->Release();
   }
+
+  //clean up
   Gdiplus::GdiplusShutdown(gdiplusToken);
-  /* HANDLE hFile = CreateFileW(fileName, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, 0, NULL);
-  if (hFile == INVALID_HANDLE_VALUE)
-  throw std::logic_error("SaveVectorToFile : can't open file ");
-  DWORD bytesWriten = 0;
-  if (!WriteFile(hFile, &data[0], (DWORD)data.size(), &bytesWriten, 0))
-  throw std::logic_error("SaveVectorToFile : can't write to file ");*/
+  
 }
 
 void getAllDesktopsScreenshot(wchar_t* filename){
@@ -406,6 +498,9 @@ void getAllDesktopsScreenshot(wchar_t* filename){
 
 }
 
+//@OUT monitorsToDisplay - vector of monitors to display, duplicates don't matter, the value 
+//                         of the monitor just needs to be there
+//@IN  monitorArg        - wstring to parse over
 void parseMonitorsToDisplay(std::vector<int>& monitorsToDisplay, std::wstring& monitorArg)
 {
   std::string tmpstr(monitorArg.begin(), monitorArg.end());
@@ -421,40 +516,46 @@ void getSomeDesktopsScreenshot(const wchar_t* filename, const std::vector<int>& 
   createScreenShot(data, monitorsToDisplay);
   SaveVectorToFile(filename, data);
 }
-//TODO: this is really bad, change it 
 
-class Temp{
+class CallbackData{
 public:
+  // what monitors to display
   std::vector<int> monitorsToDisplay;
+  // value of monitor 
   int index = 1;
+  //filename to save to 
   const wchar_t* filename;
-  Temp(const wchar_t* fileName, const std::vector<int>& vec)
+  CallbackData(const wchar_t* fileName, const std::vector<int>& vec)
   {
     filename = fileName;
     monitorsToDisplay = vec;
   }
 };
 
-BOOL CALLBACK MonitorEnumProc2(
+BOOL CALLBACK IterateThroughDesktopsAndPrint(
   HMONITOR hMonitor,    // handle to display monitor
   HDC hdcMonitor,       // handle to monitor DC
   LPRECT lprcMonitor,   // monitor intersection rectangle
   LPARAM dwData         // data
   )
 {
-  Temp* temp = reinterpret_cast<Temp*>(dwData);
-  if (temp->monitorsToDisplay.size() > 0){
-    auto result = std::find(std::begin(temp->monitorsToDisplay), std::end(temp->monitorsToDisplay), temp->index);
-    if (result != std::end(temp->monitorsToDisplay))
+  CallbackData* callbackData = reinterpret_cast<CallbackData *>(dwData);
+  
+  // if there's something in the monitorsToDisplay, it means the program should 
+  // try and only screenshot selected desktops 
+  if (callbackData->monitorsToDisplay.size() > 0){
+    auto result = std::find(std::begin(callbackData->monitorsToDisplay), std::end(callbackData->monitorsToDisplay),callbackData->index);
+    if (result != std::end(callbackData->monitorsToDisplay))
     {
-      HBITMAP bmp;
       HGDIOBJ originalBmp = NULL;
       int height = 0;
       int width = 0;
+      //instantiate gdi 
       Gdiplus::GdiplusStartupInput gdiplusStartupInput;
       ULONG_PTR gdiplusToken;
       Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+      // get handle 
       HWND desktop = GetDesktopWindow();
       HDC desktopdc = GetDC(desktop);
       HDC mydc = CreateCompatibleDC(desktopdc);
@@ -462,17 +563,27 @@ BOOL CALLBACK MonitorEnumProc2(
       width = GetSystemMetrics(SM_CXSCREEN);
       height = GetSystemMetrics(SM_CYSCREEN);
 
+      // create compatible bitmap 
       HBITMAP mybmp = CreateCompatibleBitmap(desktopdc, width, height);
+      // load bitmap into selected device context 
       HBITMAP oldbmp = (HBITMAP)SelectObject(mydc, mybmp);
+
+      // The BitBlt function performs a bit-block transfer of the color data corresponding 
+      // to a rectangle of pixels from the specified source device context into a destination device context.
       BitBlt(mydc, 0, 0, width, height, desktopdc, lprcMonitor->left, lprcMonitor->top, SRCCOPY | CAPTUREBLT);
+
       SelectObject(mydc, oldbmp);
 
+      // save to filedisk 
       Gdiplus::Bitmap* b = Gdiplus::Bitmap::FromHBITMAP(mybmp, NULL);
       CLSID  encoderClsid;
       Gdiplus::Status stat = Gdiplus::GenericError;
       if (b && GetEncoderClsid(L"image/png", &encoderClsid) != -1) {
-        std::wstring tmp(temp->filename);
-        tmp = std::to_wstring(temp->index) + L"_" + tmp;
+        // get filename to write to 
+        std::wstring tmp(callbackData->filename);
+        // add value of current deskpt as identifier 
+        tmp = std::to_wstring(callbackData->index) + L"_" + tmp;
+        // save to localdisk 
         stat = b->Save(tmp.c_str(), &encoderClsid, NULL);
       }
       if (b)
@@ -487,32 +598,40 @@ BOOL CALLBACK MonitorEnumProc2(
   }
   else
   {
-    HBITMAP bmp;
     HGDIOBJ originalBmp = NULL;
     int height = 0;
     int width = 0;
+
+    // instantiate gdi 
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;
     Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+    // get device context handle 
     HWND desktop = GetDesktopWindow();
     HDC desktopdc = GetDC(desktop);
     HDC mydc = CreateCompatibleDC(desktopdc);
 
+    // get width and height 
     width = GetSystemMetrics(SM_CXSCREEN);
     height = GetSystemMetrics(SM_CYSCREEN);
 
+    // create compatible bitmap 
     HBITMAP mybmp = CreateCompatibleBitmap(desktopdc, width, height);
+    // load bitmap into device context 
     HBITMAP oldbmp = (HBITMAP)SelectObject(mydc, mybmp);
+
+    // copy bits from selected dc and handle to our dc 
     BitBlt(mydc, 0, 0, width, height, desktopdc, lprcMonitor->left, lprcMonitor->top, SRCCOPY | CAPTUREBLT);
     SelectObject(mydc, oldbmp);
 
+    // save to file 
     Gdiplus::Bitmap* b = Gdiplus::Bitmap::FromHBITMAP(mybmp, NULL);
     CLSID  encoderClsid;
     Gdiplus::Status stat = Gdiplus::GenericError;
     if (b && GetEncoderClsid(L"image/png", &encoderClsid) != -1) {
-      std::wstring tmp(temp->filename);
-      tmp = std::to_wstring(temp->index) + L"_" + tmp;
+      std::wstring tmp(callbackData->filename);
+      tmp = std::to_wstring(callbackData->index) + L"_" + tmp;
       stat = b->Save(tmp.c_str(), &encoderClsid, NULL);
     }
     if (b)
@@ -524,16 +643,15 @@ BOOL CALLBACK MonitorEnumProc2(
     DeleteObject(mybmp);
     DeleteDC(mydc);
   }
-  temp->index++;
+  callbackData->index++;
   return true;
 }
 
 void createScreenShotForEachDesktop(const wchar_t* filename, const std::vector<int>& monitorsToDisplay)
 {
   
-  Temp temp(filename, monitorsToDisplay);
-  int index;
+  CallbackData CallbackData(filename, monitorsToDisplay);
   HDC hDesktopDC = GetDC(NULL);
-  EnumDisplayMonitors(hDesktopDC, NULL, MonitorEnumProc2, reinterpret_cast<LPARAM>(&temp));
+  EnumDisplayMonitors(hDesktopDC, NULL, IterateThroughDesktopsAndPrint, reinterpret_cast<LPARAM>(&CallbackData));
 
 }
