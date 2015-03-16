@@ -42,4 +42,4 @@ build/
 *.Build.CppClean.log
 
 #ignore PNG
-*.png
+
