@@ -146,8 +146,6 @@ BOOL CALLBACK MonitorEnumProc(
 
   // data sent between callbacks
   HDCPool * hdcPool = reinterpret_cast<HDCPool *>(dwData);
-  // increment desktop number 
-  hdcPool->desktopNum++;
 
   // check if program should check which monitors to screenshot 
   if (hdcPool->checkMonitor)
@@ -177,7 +175,8 @@ BOOL CALLBACK MonitorEnumProc(
     hdcPool->addToPool(capture, rect,height, width);    // TODO(Vlad): height and width can be extracted from rect
                                                         // no need to to pass extra parameters. 
   }
-  
+  // increment desktop number 
+  hdcPool->desktopNum++;  
   // return true to keep iterating through all valid desktops 
   return true;
 }
