@@ -1,10 +1,11 @@
 #ifndef UTIL_H_
 #define UTIL_H_
 
-//   This file is part of the screenshot-util program, licensed under the terms of the MIT License.
+//   This file is part of the screenshot-util program, licensed under the terms
+//   of the MIT License.
 //
 //   The MIT License
-//   Copyright (C) 2010-2014  The screenshot-util team (See AUTHORS file)
+//   Copyright (C) 2014-2015  The screenshot-util team (See AUTHORS file)
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy
 //   of this software and associated documentation files (the "Software"), to deal

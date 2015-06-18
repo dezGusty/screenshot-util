@@ -1,11 +1,11 @@
 #ifndef SCRSHT_UTL_VERSION_HPP
 #define SCRSHT_UTL_VERSION_HPP
 
-//   This file is part of the "SCreenshot Utility", licensed under 
-//   the terms of the MIT License (seen below).
+//   This file is part of the screenshot-util program, licensed under the terms
+//   of the MIT License.
 //
 //   The MIT License
-//   Copyright (C) 2015  Screenshot utility team (thegusty999@gmail.com)
+//   Copyright (C) 2014-2015  The screenshot-util team (See AUTHORS file)
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy
 //   of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@
 //   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //   THE SOFTWARE.
-//
+
 
 //
 // This file provides version information for the Screenshot utility.

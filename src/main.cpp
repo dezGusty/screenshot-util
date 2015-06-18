@@ -1,7 +1,8 @@
-//   This file is part of the screenshot-util program, licensed under the terms of the MIT License.
+//   This file is part of the screenshot-util program, licensed under the terms
+//   of the MIT License.
 //
 //   The MIT License
-//   Copyright (C) 2010-2014  The screenshot-util team (See AUTHORS file)
+//   Copyright (C) 2014-2015  The screenshot-util team (See AUTHORS file)
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy
 //   of this software and associated documentation files (the "Software"), to deal
@@ -51,7 +52,7 @@ as "screenshot.png" in the current working directory.
 -h
 Shows this help info.
 
--split                              Splits screenshots of different desktops (if any) into different pngs    
+-split                              Splits screenshots of different desktops (if any) into different pngs
 
 */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -84,10 +85,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     L"\t\t\t Splits screenshots of different desktops (if any)\n"
     L"\t\t\tinto different pngs.\n";
 
-  // err 2  - window not found by title 
-  // err 4  - internal error 
+  // err 2  - window not found by title
+  // err 4  - internal error
   // err 8  - can't write to file
-  // err 12 - problem parsing arguments 
+  // err 12 - problem parsing arguments
   short error = 0;
   unsigned errorReportingLevel = 0;
   bool monitorsSpecified = false;
@@ -95,7 +96,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   bool separateScreenShots = false;
   std::vector<int>monitorsToDisplay;
   std::vector<std::wstring> arguments;
-  // parse command line arguments 
+  // parse command line arguments
   error = split(lpCmdLine, ' ', arguments);
 
   HWND windowSearched = NULL;
@@ -107,7 +108,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   for (short i = 0; i < arguments.size(); i++)
   {
     // window title ptobided
-    if (wcscmp(arguments[i].c_str(), L"-wt") == 0 && i + 1<arguments.size())
+    if (wcscmp(arguments[i].c_str(), L"-wt") == 0 && i + 1 < arguments.size())
     {
       const wchar_t* seaching = arguments[i + 1].c_str();
       windowSearched = FindWindowW(NULL, arguments[i + 1].c_str());
@@ -142,7 +143,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
       parseMonitorsToDisplay(monitorsToDisplay, arguments[i + 1]);
       monitorsSpecified = true;
     }
-    //error reporting level 
+    //error reporting level
     else if (wcscmp(arguments[i].c_str(), L"-e") == 0 && i + 1 < arguments.size())
     {
       errorReportingLevel = _wtoi(arguments[i + 1].c_str());
@@ -169,7 +170,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   }
   // if filename is not set  => default value
   if (wcslen(filename) == 0) wcscpy_s(filename, L"screenshot.png");
-  // found window by title 
+  // found window by title
   if (windowSearched || rectProvided)
   {
     getScreenShotByWindowTitleOrRect(windowSearched, filename, rect, rectProvided);
@@ -196,11 +197,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
       else
       {
         getAllDesktopsScreenshot(filename);
-
       }
-      
     }
-
   }
+
   return error;
 }

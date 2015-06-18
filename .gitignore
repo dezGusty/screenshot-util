@@ -40,6 +40,8 @@ build/
 *.lastbuildstate
 *.res
 *.Build.CppClean.log
+*.aps
+res/*.aps
 
 #ignore PNG
 *.res
