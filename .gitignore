@@ -45,3 +45,4 @@ res/*.aps
 
 #ignore PNG
 *.res
+*.aps
