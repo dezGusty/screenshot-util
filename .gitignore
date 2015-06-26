@@ -43,6 +43,9 @@ build/
 *.aps
 res/*.aps
 
+#ignore any coverity build topics
+solution/cov-int/
+
 #ignore PNG
 *.res
 *.aps
