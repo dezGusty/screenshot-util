@@ -55,7 +55,11 @@ Shows this help info.
 -split                              Splits screenshots of different desktops (if any) into different pngs
 
 */
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int WINAPI WinMain(
+  _In_ HINSTANCE hInstance, 
+  _In_opt_ HINSTANCE hPrevInstance, 
+  _In_ LPSTR lpCmdLine, 
+  _In_ int nCmdShow)
 {
   std::wstring helpString = L"\tscreenshot-util -\tSave a screenshot of the Windows desktop\n\t\t\tor window in .png format.\n\n" \
     L"SYNOPSIS:\n"\
