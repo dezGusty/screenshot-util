@@ -109,100 +109,107 @@ int WINAPI WinMain(
 
   bool rectProvided = false;
 
-  for (short i = 0; i < arguments.size(); i++)
+  try
   {
-    // window title ptobided
-    if (wcscmp(arguments[i].c_str(), L"-wt") == 0 && i + 1 < arguments.size())
+    for (short i = 0; i < arguments.size(); i++)
     {
-      const wchar_t* seaching = arguments[i + 1].c_str();
-      windowSearched = FindWindowW(NULL, arguments[i + 1].c_str());
-      if (windowSearched)
+      // window title ptobided
+      if (wcscmp(arguments[i].c_str(), L"-wt") == 0 && i + 1 < arguments.size())
       {
-        SetWindowPos(windowSearched, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-        Sleep(200); //TODO: Arbitrary waiting time for window to become topmost
-        if (!rectProvided) GetWindowRect(windowSearched, &rect);
+        const wchar_t* seaching = arguments[i + 1].c_str();
+        windowSearched = FindWindowW(NULL, arguments[i + 1].c_str());
+        if (windowSearched)
+        {
+          SetWindowPos(windowSearched, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+          Sleep(200); //TODO: Arbitrary waiting time for window to become topmost
+          if (!rectProvided) GetWindowRect(windowSearched, &rect);
+        }
+        else
+        {
+          windowNotFound = true;
+        }
       }
-      else
+      // rect provided
+      else if (wcscmp(arguments[i].c_str(), L"-rt") == 0 && i + 4 < arguments.size())
       {
-        windowNotFound = true;
+        rect.left = _wtoi(arguments[i + 1].c_str());
+        rect.top = _wtoi(arguments[i + 2].c_str());
+        rect.right = _wtoi(arguments[i + 3].c_str());
+        rect.bottom = _wtoi(arguments[i + 4].c_str());
+        rectProvided = true;
       }
-    }
-    // rect provided
-    else if (wcscmp(arguments[i].c_str(), L"-rt") == 0 && i + 4 < arguments.size())
-    {
-      rect.left = _wtoi(arguments[i + 1].c_str());
-      rect.top = _wtoi(arguments[i + 2].c_str());
-      rect.right = _wtoi(arguments[i + 3].c_str());
-      rect.bottom = _wtoi(arguments[i + 4].c_str());
-      rectProvided = true;
-    }
-    // output file provided
-    else if (wcscmp(arguments[i].c_str(), L"-o") == 0 && i + 1 < arguments.size())
-    {
-      wcscpy_s(filename, arguments[i + 1].c_str());
-    }
-    //monitor number to display
-    else if (wcscmp(arguments[i].c_str(), L"-mn") == 0 && i + 1 < arguments.size())
-    {
-      parseMonitorsToDisplay(monitorsToDisplay, arguments[i + 1]);
-      monitorsSpecified = true;
-    }
-    //error reporting level
-    else if (wcscmp(arguments[i].c_str(), L"-e") == 0 && i + 1 < arguments.size())
-    {
-      errorReportingLevel = _wtoi(arguments[i + 1].c_str());
-    }
-    //help
-    else if (wcscmp(arguments[i].c_str(), L"-h") == 0)
-    {
-      MessageBox(NULL, helpString.c_str(), L"Help for screenshot-util", MB_OK);
-    }
-    //separate screenshots
-    else if (wcscmp(arguments[i].c_str(), L"-split") == 0)
-    {
-      separateScreenShots = true;
-    }
-  }
-  if (windowNotFound && errorReportingLevel > 0)
-  {
-    error = 2;
-    return error;
-  }
-  if (error  && errorReportingLevel > 0)
-  {
-    return error;
-  }
-  // if filename is not set  => default value
-  if (wcslen(filename) == 0) wcscpy_s(filename, L"screenshot.png");
-  // found window by title
-  if (windowSearched || rectProvided)
-  {
-    getScreenShotByWindowTitleOrRect(windowSearched, filename, rect, rectProvided);
-  }
-  else
-  {
-    if (monitorsSpecified)
-    {
-      if (separateScreenShots)
+      // output file provided
+      else if (wcscmp(arguments[i].c_str(), L"-o") == 0 && i + 1 < arguments.size())
       {
-        createScreenShotForEachDesktop(filename, monitorsToDisplay);
+        wcscpy_s(filename, arguments[i + 1].c_str());
       }
-      else
+      //monitor number to display
+      else if (wcscmp(arguments[i].c_str(), L"-mn") == 0 && i + 1 < arguments.size())
       {
-        getSomeDesktopsScreenshot(filename, monitorsToDisplay);
+        parseMonitorsToDisplay(monitorsToDisplay, arguments[i + 1]);
+        monitorsSpecified = true;
       }
+      //error reporting level
+      else if (wcscmp(arguments[i].c_str(), L"-e") == 0 && i + 1 < arguments.size())
+      {
+        errorReportingLevel = _wtoi(arguments[i + 1].c_str());
+      }
+      //help
+      else if (wcscmp(arguments[i].c_str(), L"-h") == 0)
+      {
+        MessageBox(NULL, helpString.c_str(), L"Help for screenshot-util", MB_OK);
+      }
+      //separate screenshots
+      else if (wcscmp(arguments[i].c_str(), L"-split") == 0)
+      {
+        separateScreenShots = true;
+      }
+    }
+    if (windowNotFound && errorReportingLevel > 0)
+    {
+      error = 2;
+      return error;
+    }
+    if (error  && errorReportingLevel > 0)
+    {
+      return error;
+    }
+    // if filename is not set  => default value
+    if (wcslen(filename) == 0) wcscpy_s(filename, L"screenshot.png");
+    // found window by title
+    if (windowSearched || rectProvided)
+    {
+      getScreenShotByWindowTitleOrRect(windowSearched, filename, rect, rectProvided);
     }
     else
     {
-      if (separateScreenShots)
+      if (monitorsSpecified)
       {
-        createScreenShotForEachDesktop(filename, monitorsToDisplay);
+        if (separateScreenShots)
+        {
+          createScreenShotForEachDesktop(filename, monitorsToDisplay);
+        }
+        else
+        {
+          getSomeDesktopsScreenshot(filename, monitorsToDisplay);
+        }
       }
       else
       {
-        getAllDesktopsScreenshot(filename);
+        if (separateScreenShots)
+        {
+          createScreenShotForEachDesktop(filename, monitorsToDisplay);
+        }
+        else
+        {
+          getAllDesktopsScreenshot(filename);
+        }
       }
     }
+  }
+  catch (const std::exception& e)
+  {
+    //MessageBox(NULL, e.what(), L"Exception caught", MB_OK);
   }
 
   return error;
